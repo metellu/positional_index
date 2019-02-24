@@ -7,18 +7,25 @@ import re
 from collections import defaultdict
 
 def collect_docs(dir_path):
-    doc_arr = []
+    doc_dict = {}
+    counter = 0
     if not os.path.isdir(dir_path):
         print("The specified path is not a directory.")
         exit(1)
     else:
         for doc in os.listdir(dir_path):
-            #print(doc)
+            print(doc)
             if os.path.isfile(dir_path+doc):
-                doc_arr.append(dir_path+doc)
-    return doc_arr
+                counter = counter+1
+                doc_id = "D"+str(counter)
+                if not doc_dict.has_key(doc_id):
+                    doc_dict[doc_id] = dir_path+doc
+    file = open(dir_path+"/doc_dict","w+")
+    pickle.dump(doc_dict,file)
+    file.close
+    return doc_dict
 
-def build_index(doc,stopwords):
+def build_semi_positional_index(doc,doc_id,stopwords):
     doc_name=os.path.basename(doc)
     file = open(doc,"r")
     term_arr = []
@@ -46,7 +53,7 @@ def build_index(doc,stopwords):
             inverted_index[term] = [index]
     semi_positional_index = defaultdict(list)
     for term,postings in inverted_index.items():
-        semi_positional_index[term]={(doc_name,len(postings)):postings}
+        semi_positional_index[term]={(doc_id,len(postings)):postings}
     return semi_positional_index
     
 if __name__ == '__main__':
@@ -57,13 +64,15 @@ if __name__ == '__main__':
     
     if os.path.exists(DOC_PATH+"/index"):
         os.remove(DOC_PATH+"/index")
+    if os.path.exists(DOC_PATH+"/doc_dict"):
+        os.remove(DOC_PATH+"/doc_dict")
 
     STOPWORDS = ['and','but','is','the','to']
     doc_index_arr = []
     index_key_arr = []
     docs = collect_docs(DOC_PATH)
-    for doc in docs:
-        doc_index = build_index(doc,STOPWORDS)
+    for doc_id,doc in docs.items():
+        doc_index = build_semi_positional_index(doc,doc_id,STOPWORDS)
         doc_index_arr.append(doc_index)
         index_key_arr.extend(doc_index.keys())
         if "" in index_key_arr:
