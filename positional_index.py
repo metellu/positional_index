@@ -32,7 +32,7 @@ def build_semi_positional_index(doc,doc_id,stopwords):
     for line in file.readlines():
         #tokenize and normalize(lowercase) the document
         #put the tokens into an array for processing
-        term_arr.extend(re.split('\W+',line.lower().strip()))
+        term_arr.extend(re.split('[^a-zA-Z]',line.lower().strip()))
         if '' in term_arr:
             term_arr.remove('')
 
