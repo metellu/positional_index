@@ -58,6 +58,12 @@ def parse_query(query,index):
 
     query_terms = re.split(r'\s+',query)
     possible_operators = ['and','or','(',')']
+    operator_num = len(re.findall(r'and|or',query))
+    non_operator_num = len([term for term in query_terms if not term in possible_operators])
+
+    if non_operator_num != operator_num+1:
+        print("Invalid query.")
+        exit(1)
 
     operator_stack = []
     output = []
@@ -121,9 +127,12 @@ def form_final_output(index,docs_dict,result_dict):
     doc_ids = ['D'+str(id) for id in result_dict['doc_ids']]
     
     returning_dict = {}
-
+    print("Matched Document(s):")
+    for id in doc_ids:
+        print("- "+docs_dict[id])
+    print("\nTerm Match Details:")
     for term in result_dict['terms']:
-        print(term+":")
+        print("["+term+"]:")
         tmp_dict = {}
         if not term in index.keys():
             print("- No matches.")
