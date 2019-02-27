@@ -42,7 +42,7 @@ def build_semi_positional_index(doc,doc_id,stopwords):
     for index,term in enumerate(term_arr):
         if term in stopwords:
             #skip all specified stopwords
-            next
+            continue
         if term in inverted_index.keys():
             #If the dict contains the term,
             #the index of the current term will be appended
