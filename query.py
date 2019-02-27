@@ -3,6 +3,8 @@ import collections
 import re
 import argparse
 import pickle
+import os
+import json
 
 def retrieve_postings(index,term):
     returning_arr = []
@@ -45,6 +47,7 @@ def parse_query(query,index):
     if len(re.findall(r'\(',query)) != len(re.findall(r'\)',query)):
         print "Invalid query"
         exit(1)
+    
     #Add space before and after the parenthesis, so that 
     #we can split the query by space.
     query = query.replace('(','( ')
@@ -86,26 +89,55 @@ def parse_query(query,index):
             output.append(term)
     while len(operator_stack) != 0:
         output.append(operator_stack.pop())
-    print(output)
+    #print(output)
     result = []
+    terms = []
     for elem in output:
         if not elem in ['and','or']:
             result.append(retrieve_postings(index,elem))
+            terms.append(elem)
         elif elem == 'and':
+            #Retrieve the closest two previous elements.
             r_operand = result.pop()
             l_operand = result.pop()
             result.append(and_operator(index,l_operand,r_operand))
         elif elem == 'or':
+            #Retrieve the closest two previous elements.
             r_operand = result.pop()
             l_operand = result.pop()
             result.append(or_operator(index,l_operand,r_operand))
-            print(result)
+            #print(result)
     if len(result) != 1:
         #If by now, the result array contains more than one element,
         #the query must be invalid.
         print "Invalid query."
         exit(1)
-    return result
+    result_dict = {}
+    result_dict['doc_ids'] = result[0]
+    result_dict['terms'] = terms
+    return result_dict
+
+def form_final_output(index,docs_dict,result_dict):
+    doc_ids = ['D'+str(id) for id in result_dict['doc_ids']]
+    
+    returning_dict = {}
+
+    for term in result_dict['terms']:
+        print(term+":")
+        tmp_dict = {}
+        if not term in index.keys():
+            print("- No matches.")
+            continue
+        postings = index.get(term)
+        for key in postings.keys():
+            if isinstance(key,tuple):
+                if key[0] in doc_ids:
+                    positions = ",".join(map(str,postings.get(key)))
+                    print("- "+docs_dict.get(key[0])+": "+positions)
+                    tmp_dict[docs_dict.get(key[0])] = postings.get(key)
+        if len(tmp_dict.keys()) == 0:
+            print("- No matches.")
+        returning_dict[term] = tmp_dict
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -114,11 +146,19 @@ if __name__ == '__main__':
     arg = parser.parse_args()
     QUERY = arg.query
     DOC_PATH = arg.path
-    print(QUERY)
-    print(DOC_PATH)
 
-    file = open(DOC_PATH,"r")
-    positional_index = pickle.load(file)
-    #QUERY="really"
+    #Loading index from disc.
+    if os.path.exists(DOC_PATH):
+        with open(DOC_PATH,"r") as file:
+            positional_index = pickle.load(file)
+    else:
+        print("Cannot find index file at the specified location.")
+        exit(1)
+    DOC_DICT_PATH = DOC_PATH.replace("index","doc_dict")
+    with open(DOC_DICT_PATH,"r") as file:
+        docs_dict = pickle.load(file)
     result = parse_query(QUERY,positional_index)
-    print(result)
+    if len(result['doc_ids']) == 0:
+        print("No matches.")
+    else:
+        form_final_output(positional_index,docs_dict,result)
