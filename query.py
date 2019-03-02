@@ -45,7 +45,7 @@ def or_operator(index,term1_docs,term2_docs):
 
 def parse_query(query,index):
     if len(re.findall(r'\(',query)) != len(re.findall(r'\)',query)):
-        print "Invalid query"
+        print "Invalid query: parenthesis don't match."
         exit(1)
     
     #Add space before and after the parenthesis, so that 
@@ -61,7 +61,7 @@ def parse_query(query,index):
     operator_num = len(re.findall(r'and|or',query))
     non_operator_num = len([term for term in query_terms if not term in possible_operators])
 
-    if non_operator_num != operator_num+1:
+    if operator_num > 0 and non_operator_num != operator_num+1:
         print("Invalid query.")
         exit(1)
 
@@ -95,6 +95,18 @@ def parse_query(query,index):
             output.append(term)
     while len(operator_stack) != 0:
         output.append(operator_stack.pop())
+    
+    flag = False
+    for elem in output:
+        if elem in ['and','or']:
+            flag = True
+            break
+    
+    if flag == False:
+        counter = len(output)-1
+        while counter>0:
+            output.append('and')
+            counter = counter - 1
     #print(output)
     result = []
     terms = []
@@ -113,7 +125,7 @@ def parse_query(query,index):
             l_operand = result.pop()
             result.append(or_operator(index,l_operand,r_operand))
             #print(result)
-    if len(result) != 1:
+    if operator_num > 0 and len(result) != 1:
         #If by now, the result array contains more than one element,
         #the query must be invalid.
         print "Invalid query."
