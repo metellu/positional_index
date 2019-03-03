@@ -14,6 +14,8 @@ def retrieve_postings(index,term):
     for key in term_postings.keys():
         if isinstance(key,tuple):
             doc_id = str(key[0])[1:]
+
+            
             if not doc_id in returning_arr:
                 returning_arr.append(doc_id)
     return returning_arr
@@ -55,14 +57,19 @@ def parse_query(query,index):
 
     #Normalize the query
     query = query.lower()
-
+    query = query.replace('-','')
     query_terms = re.split(r'\s+',query)
     possible_operators = ['and','or','(',')']
-    operator_num = len(re.findall(r'and|or',query))
+    operator_num = 0
+    for term in query_terms:
+        for operator in ['and','or']:
+            if operator == term:
+                operator_num = operator_num+1
+                break
     non_operator_num = len([term for term in query_terms if not term in possible_operators])
 
     if operator_num > 0 and non_operator_num != operator_num+1:
-        print("Invalid query.")
+        print("Invalid query. ")
         exit(1)
 
     operator_stack = []
@@ -154,7 +161,7 @@ def form_final_output(index,docs_dict,result_dict):
             if isinstance(key,tuple):
                 if key[0] in doc_ids:
                     positions = ",".join(map(str,postings.get(key)))
-                    print("- "+docs_dict.get(key[0])+": "+positions)
+                    print("- "+docs_dict.get(key[0],key[0])+": "+positions)
                     tmp_dict[docs_dict.get(key[0])] = postings.get(key)
         if len(tmp_dict.keys()) == 0:
             print("- No matches.")
@@ -176,8 +183,11 @@ if __name__ == '__main__':
         print("Cannot find index file at the specified location.")
         exit(1)
     DOC_DICT_PATH = DOC_PATH.replace("index","doc_dict")
-    with open(DOC_DICT_PATH,"r") as file:
-        docs_dict = pickle.load(file)
+    if os.path.exists(DOC_DICT_PATH):
+        with open(DOC_DICT_PATH,"r") as file:
+            docs_dict = pickle.load(file)
+    else:
+        doc_dict = {}
     result = parse_query(QUERY,positional_index)
     if len(result['doc_ids']) == 0:
         print("No matches.")
