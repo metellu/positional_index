@@ -24,6 +24,8 @@ def and_operator(index,term1_docs,term2_docs):
     term1_index=0
     term2_index=0
     returning_arr = []
+    term1_docs = sorted([int(i) for i in term1_docs])
+    term2_docs = sorted([int(i) for i in term2_docs])
     while term1_index < len(term1_docs) and term2_index < len(term2_docs):
         if term1_docs[term1_index] == term2_docs[term2_index]:
             returning_arr.append(term1_docs[term1_index])
@@ -144,6 +146,7 @@ def parse_query(query,index):
 
 def form_final_output(index,docs_dict,result_dict):
     doc_ids = ['D'+str(id) for id in result_dict['doc_ids']]
+    doc_ids = set(doc_ids)
     
     returning_dict = {}
     print("Matched Document(s):")
@@ -161,7 +164,7 @@ def form_final_output(index,docs_dict,result_dict):
             if isinstance(key,tuple):
                 if key[0] in doc_ids:
                     positions = ",".join(map(str,postings.get(key)))
-                    print("- "+docs_dict.get(key[0],key[0])+": "+positions)
+                    print("- "+docs_dict.get(key[0])+": "+positions)
                     tmp_dict[docs_dict.get(key[0])] = postings.get(key)
         if len(tmp_dict.keys()) == 0:
             print("- No matches.")
@@ -186,8 +189,6 @@ if __name__ == '__main__':
     if os.path.exists(DOC_DICT_PATH):
         with open(DOC_DICT_PATH,"r") as file:
             docs_dict = pickle.load(file)
-    else:
-        doc_dict = {}
     result = parse_query(QUERY,positional_index)
     if len(result['doc_ids']) == 0:
         print("No matches.")
