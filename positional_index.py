@@ -30,9 +30,12 @@ def build_semi_positional_index(doc,doc_id,stopwords):
     file = open(doc,"r")
     term_arr = []
     for line in file.readlines():
+        #remove hyphen, so that word like 'state-of-the-art' can be
+        #treated properly as one word.
+        line = line.replace('-','')
         #tokenize and normalize(lowercase) the document
         #put the tokens into an array for processing
-        term_arr.extend(re.split('[^a-zA-Z]',line.lower().strip()))
+        term_arr.extend(re.split('[^a-zA-Z]+',line.lower().strip()))
         if '' in term_arr:
             term_arr.remove('')
 
