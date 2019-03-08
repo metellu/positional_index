@@ -18,8 +18,7 @@ if __name__ == '__main__':
             tokens_list.remove('')
            
     token_dict = {}
-    #doc_name = os.getenv('map_input_file')
-    doc_name = "entertainment_doc"
+    doc_name = os.getenv('map_input_file')
     for index,token in enumerate(tokens_list):
         if token in STOPWORDS:
             continue
