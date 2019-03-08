@@ -1,7 +1,7 @@
 #!/bin/sh
 
 OUTPUT=`hadoop fs -ls /user/cloudera/outputAssignment1 2>&1`
-if [ "$OUTPUT" !~ "No such file or directory" ]
+if [[ ! "$OUTPUT" =~ "No such file or directory" ]]
 then
     hadoop fs -rm -r /user/cloudera/outputAssignment1
     if [ "$?" != "0" ]
@@ -31,3 +31,12 @@ then
     echo "Failed to build inverted index. Exiting..."
     exit 1
 fi
+
+while read -p "Enter query or type 'EXIT' to quit:" query
+do
+    if [ "$query" == "EXIT" ]
+    then
+        exit 0
+    fi
+    python query.py -d /home/cloudera/index -q "${query}"
+done
