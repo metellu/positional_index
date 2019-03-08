@@ -14,8 +14,6 @@ def retrieve_postings(index,term):
     for key in term_postings.keys():
         if isinstance(key,tuple):
             doc_id = str(key[0])[1:]
-
-            
             if not doc_id in returning_arr:
                 returning_arr.append(doc_id)
     return returning_arr
@@ -61,6 +59,8 @@ def parse_query(query,index):
     query = query.lower()
     query = query.replace('-','')
     query_terms = re.split(r'\s+',query)
+    while '' in query_terms:
+        query_terms.remove('')
     possible_operators = ['and','or','(',')']
     operator_num = 0
     for term in query_terms:
@@ -175,9 +175,8 @@ if __name__ == '__main__':
     parser.add_argument('-q','--query',help='Specify search query',dest='query',required=True)
     parser.add_argument('-d','--doc',help='Specify the path of index file',dest='path',required=True)
     arg = parser.parse_args()
-    QUERY = arg.query
     DOC_PATH = arg.path
-
+    QUERY = arg.query
     #Loading index from disc.
     if os.path.exists(DOC_PATH):
         with open(DOC_PATH,"r") as file:
